@@ -30,6 +30,7 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
           replacement: pathResolve('types') + '/',
         },
       ],
+      extensions: ['.ts'],
     },
     // plugins
     plugins: createVitePlugins(isBuild),

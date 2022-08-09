@@ -1,33 +1,50 @@
 {
   "compilerOptions": {
+     // 指定 ECMAScript 目标版本: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', or 'ESNEXT'
     "target": "esnext",
     "module": "esnext",
+    // 用于选择模块解析策略，有'node'和'classic'两种类型
     "moduleResolution": "node",
     "strict": true,
     "noLib": false,
     "forceConsistentCasingInFileNames": true,
+    // 用来指定允许从没有默认导出的模块中默认导入 
     "allowSyntheticDefaultImports": true,
+     // 对函数参数进行严格逆变比较
     "strictFunctionTypes": false,
     "jsx": "preserve",
     "baseUrl": ".",
     "allowJs": true,
+    // 用来指定编译时是否生成.map文件
     "sourceMap": true,
+    // 通过为导入内容创建命名空间，实现CommonJS和ES模块之间的互操作性
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "noUnusedLocals": true,
+    // 默认false,是否检测定义了但是没使用的变量
+    "noUnusedLocals": false,
+    // 用于检查是否有在函数体中没有使用的参数
     "noUnusedParameters": true,
+    // experimentalDecorators用于指定是否启用实验性的装饰器特性
     "experimentalDecorators": true,
+    /* 注意：如果未指定--lib，则会注入默认的librares列表。注入的默认库为：
+       对于 --target ES5: DOM,ES5,ScriptHost
+       对于 --target ES6: DOM,ES6,DOM.Iterable,ScriptHost
+       TS 绝不会在您的代码中注入polyfill,所以需要你自己制定编译lib */
     "lib": ["dom", "esnext"],
+    // 不允许变量或函数参数具有隐式any类型
     "noImplicitAny": false,
     "skipLibCheck": true,
     "types": ["vite/client", "element-plus/global"],
+    // 编译的时候删除注释
     "removeComments": true,
     "paths": {
       "/@/*": ["src/*"],
       "/#/*": ["types/*"]
     }
   },
+  // 指定需要编译文件 否则默认当前目录下除了exclude之外的所有.ts, .d.ts,.tsx 文件
   "include": [
+    "src/components/**/*.ts",
     "tests/**/*.ts",
     "src/**/*.ts",
     "src/**/*.d.ts",
@@ -40,5 +57,6 @@
     "mock/**/*.ts",
     "vite.config.ts"
   ],
+  // 不编译某些文件
   "exclude": ["node_modules", "tests/server/**/*.ts", "dist", "**/*.js"]
 }
