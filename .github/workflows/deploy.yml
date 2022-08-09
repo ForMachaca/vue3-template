@@ -2,7 +2,7 @@ name: deploy
 
 on:
   push:
-    branches: [main] # master 分支有 push 时触发
+    branches: [threejs] # master 分支有 push 时触发
     paths-ignore: # 下列文件的变更不触发部署，可以自行添加
       - README.md
 
@@ -28,7 +28,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3 # 使用部署到 GitHub pages 的 action
         with:
           publish_dir: ./dist # 部署打包后的 dist 目录
-          github_token: ${{ secrets.FAST_VUE3 }} # secret 名
+          github_token: ${{ secrets.VUE3_TEMPLATE }} # secret 名
           user_name: ${{ secrets.MY_USER_NAME }}
           user_email: ${{ secrets.MY_USER_EMAIL }}
           commit_message: 自动部署 # 部署时的 git 提交信息，自由填写
