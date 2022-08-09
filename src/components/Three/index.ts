@@ -2,7 +2,8 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import debounce from 'lodash/debounce.js'
-
+import Measure from './Measure'
+import { MeasureMode } from './Measure'
 export default class ThreeJs {
   scene: THREE.Scene | null = null
   camera: THREE.PerspectiveCamera | null = null
@@ -12,12 +13,26 @@ export default class ThreeJs {
   controls: OrbitControls | null = null
   labelRenderer: CSS2DRenderer | null = null
   onWindowResizeFn: Function | null = null
+  container: HTMLElement | null = null
+  meeasureTool: Measure | null = null
 
-  constructor(params) {
-    this.init(params)
+  constructor(container: HTMLElement | null) {
+    container && this.init(container)
   }
-
-  init({ container }: { container: HTMLElement }): void {
+  initMesure(measure = MeasureMode.Distance) {
+    if (this.meeasureTool) {
+      this.meeasureTool.close()
+      this.meeasureTool = null
+    }
+    if (this.labelRenderer && this.scene && this.camera && this.controls) {
+      this.meeasureTool = new Measure(this.labelRenderer, this.scene, this.camera, this.controls, measure)
+      return this.meeasureTool
+    } else {
+      return null
+    }
+  }
+  init(container: HTMLElement): void {
+    this.container = container
     this.scene = new THREE.Scene()
     this.setCamera(container)
     this.setRenderer(container)
@@ -30,8 +45,13 @@ export default class ThreeJs {
   destroyed() {
     this.controls && (this.controls.dispose(), (this.controls = null))
     this.renderer && (this.renderer.dispose(), (this.renderer = null))
-    this.camera = null
+
+    this.labelRenderer && (this.labelRenderer = null)
+    this.camera && (this.camera = null)
+    this.scene && (this.scene = null)
     this.onWindowResizeFn && window.removeEventListener('resize', this.onWindowResizeFn as any)
+    // cancelAnimationFrame()
+    this.container && this.container.parentNode && (this.container.parentNode.removeChild(this.container), (this.container = null))
   }
   setLabelRenderer(container): void {
     this.labelRenderer = new CSS2DRenderer()
