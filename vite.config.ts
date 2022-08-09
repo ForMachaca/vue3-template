@@ -15,10 +15,10 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
   return {
     resolve: {
       alias: [
-        {
-          find: 'vue-i18n',
-          replacement: 'vue-i18n/dist/vue-i18n.cjs.js',
-        },
+        // {
+        //   find: 'vue-i18n',
+        //   replacement: 'vue-i18n/dist/vue-i18n.cjs.js',
+        // },
         // /@/xxxx => src/xxxx
         {
           find: /\/@\//,
@@ -30,7 +30,6 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
           replacement: pathResolve('types') + '/',
         },
       ],
-      extensions: ['.ts'],
     },
     // plugins
     plugins: createVitePlugins(isBuild),
