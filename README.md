@@ -1,4 +1,8 @@
-# vue3-template 基于[fast-vue3](https://github.com/tobe-fe-dalao/fast-vue3) 删减了部分内容
+# vue3-template + Threejs 基于[fast-vue3](https://github.com/tobe-fe-dalao/fast-vue3) 删减了部分内容
+
+```
+集成 threejs 框架
+```
 
 ## 🪂 大厂协作-代码规范
 
@@ -294,7 +298,6 @@ const router = createRouter({
 export default router;
 ```
 
-
 ## 🎎Proxy 代理
 
 ```typescript
@@ -351,10 +354,9 @@ export default init;
 
 # 使用
 
-
 ```shell
 # 拉取仓库代码
-git clone  
+git clone
 
 # 进入项目文件夹
 cd vue3-template
@@ -367,7 +369,6 @@ pnpm run dev
 ```
 
 如果不报错，恭喜你点火成功。否则，请看下面常见问题。
-
 
 # 工具库
 

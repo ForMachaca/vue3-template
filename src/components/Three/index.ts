@@ -100,6 +100,7 @@ export default class ThreeJs {
     this.renderer = new THREE.WebGLRenderer()
     // 设置画布的大小
     this.renderer.setSize(container.clientWidth, container.clientHeight)
+    container.style.position = 'relative'
     //canvas 画布  renderer.domElement
     container.appendChild(this.renderer.domElement)
   }
@@ -116,7 +117,7 @@ export default class ThreeJs {
   setCube(): void {
     if (this.scene) {
       const geometry = new THREE.BoxGeometry() //创建一个立方体几何对象Geometry
-      const material = new THREE.MeshBasicMaterial({ color: 0xff3200 }) //材质对象Material
+      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }) //材质对象Material
       // const texture = new THREE.TextureLoader().load('/assets/imgs/dalishi.jpg') //首先，获取到纹理
       // const material = new THREE.MeshBasicMaterial({ map: texture }) //然后创建一个phong材质来处理着色，并传递给纹理映射
       this.mesh = new THREE.Mesh(geometry, material) //网格模型对象Mesh

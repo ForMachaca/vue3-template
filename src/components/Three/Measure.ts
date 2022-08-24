@@ -2,8 +2,9 @@ import * as THREE from 'three'
 import { DragControls } from 'three/examples/jsm/controls/DragControls'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
-import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
+import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { FontLoader, Font } from 'three/examples/jsm/loaders/FontLoader.js'
+
 import baseFont from 'three/examples/fonts/helvetiker_regular.typeface.json'
 export enum MeasureMode {
   Distance = 'Distance',
@@ -56,6 +57,7 @@ export default class Measure {
   dragControls?: DragControls // enable objects(labels) to be dragged
   raycaster?: THREE.Raycaster
   font?: Font
+  helpLabel?: CSS2DObject | null
   mouseMoved = false
   isCompleted = false
   points?: THREE.Points // used for measure distance and area
@@ -96,16 +98,21 @@ export default class Measure {
   /**
    * Starts the measurement
    */
-  open() {
+  open(mode?: MeasureMode | null) {
+    if (mode) this.mode = mode
+    this.close()
     // add mouse 'click' event, but do not trigger highlight for mouse drag event
     this.canvas.addEventListener('mousedown', this.mousedown)
     this.canvas.addEventListener('mousemove', this.mousemove)
     this.canvas.addEventListener('mouseup', this.mouseup)
-    this.canvas.addEventListener('dblclick', this.dblclick)
+    this.canvas.addEventListener('contextmenu', this.dblclick)
+    // this.canvas.addEventListener('dblclick', this.dblclick)
     window.addEventListener('keydown', this.keydown)
 
     this.pointArray = []
     this.pointsArray = []
+    this.helpLabel = null
+
     this.raycaster = new THREE.Raycaster()
 
     // points are required for measuring distance, area and angle
@@ -140,6 +147,12 @@ export default class Measure {
     this.polyline && this.scene.remove(this.polyline)
     this.faces && this.scene.remove(this.faces)
     this.curve && this.scene.remove(this.curve)
+    // delete
+    this.helpLabel && this.scene.remove(this.helpLabel)
+    this.tempLabel && this.scene.remove(this.tempLabel)
+
+    this.tempLabel = undefined
+    this.helpLabel = undefined
     this.pointArray = []
     this.pointsArray = []
     this.raycaster = undefined
@@ -277,6 +290,8 @@ export default class Measure {
     this.tempPoints && this.scene.remove(this.tempPoints)
     this.tempLine && this.scene.remove(this.tempLine)
     this.tempLineForArea && this.scene.remove(this.tempLineForArea)
+    // delete
+    this.helpLabel && this.scene.remove(this.helpLabel)
     this.fontSize = 0
   }
 
@@ -290,6 +305,15 @@ export default class Measure {
   mousedown = (e: MouseEvent) => {
     this.mouseMoved = false
   }
+  addHelpLabel = (label, position) => {
+    if (!this.helpLabel) {
+      this.helpLabel = this.createHelper(label)
+      console.log(this.helpLabel)
+      this.scene.add(this.helpLabel)
+    }
+    this.helpLabel.position.set(position.x, position.y, position.z)
+    this.helpLabel.element.innerHTML = label
+  }
 
   mousemove = (e: MouseEvent) => {
     this.mouseMoved = true
@@ -298,19 +322,22 @@ export default class Measure {
     if (!point) {
       return
     }
+    // console.log(point)
+
+    this.addHelpLabel('点击左键开始测量', new THREE.Vector3(point.x, point.y * 0.5, point.z))
 
     // draw the temp point as mouse moves
     const points = this.tempPoints || this.createPoints(1)
     const geom = points.geometry as any
     const pos = (geom.attributes && geom.attributes.position) || undefined
-    if (pos) {
-      let i = 0
-      pos.array[i++] = point.x
-      pos.array[i++] = point.y
-      pos.array[i++] = point.z
-      geom.setDrawRange(0, 1)
-      pos.needsUpdate = true
-    }
+    // if (pos) {
+    //   let i = 0
+    //   pos.array[i++] = point.x
+    //   pos.array[i++] = point.y
+    //   pos.array[i++] = point.z
+    //   geom.setDrawRange(0, 1)
+    //   pos.needsUpdate = true
+    // }
     if (!this.tempPoints) {
       this.scene.add(points) // just add to scene once
       this.tempPoints = points
@@ -330,6 +357,8 @@ export default class Measure {
     }
     // draw the temp line as mouse moves
     if (this.pointArray.length > 0) {
+      this.addHelpLabel('点击右键完成测量', new THREE.Vector3(point.x, point.y * 0.5, point.z))
+
       const p0 = this.pointArray[this.pointArray.length - 1] // get last point
       const line = this.tempLine || this.createLine(3)
       line.computeLineDistances() // LineDashedMaterial requires to call this
@@ -391,18 +420,18 @@ export default class Measure {
     this.lastClickTime = now
 
     const count = this.pointArray.length
-    if (this.points) {
-      const geom = this.points.geometry as any
-      const pos = (geom.attributes && geom.attributes.position) || undefined
-      if (pos && count * 3 + 3 < this.MAX_POINTS) {
-        const i = count * 3
-        pos.array[i] = point.x
-        pos.array[i + 1] = point.y
-        pos.array[i + 2] = point.z
-        geom.setDrawRange(0, count + 1)
-        pos.needsUpdate = true
-      }
-    }
+    // if (this.points) {
+    //   const geom = this.points.geometry as any
+    //   const pos = (geom.attributes && geom.attributes.position) || undefined
+    //   if (pos && count * 3 + 3 < this.MAX_POINTS) {
+    //     const i = count * 3
+    //     pos.array[i] = point.x
+    //     pos.array[i + 1] = point.y
+    //     pos.array[i + 2] = point.z
+    //     geom.setDrawRange(0, count + 1)
+    //     pos.needsUpdate = true
+    //   }
+    // }
     if ((this.mode === MeasureMode.Distance || this.mode === MeasureMode.Area || this.mode === MeasureMode.Angle) && this.polyline) {
       const geom = this.polyline.geometry as any
       const pos = (geom.attributes && geom.attributes.position) || undefined
@@ -471,8 +500,11 @@ export default class Measure {
     if (!this.raycaster || !this.camera || !this.scene || this.isCompleted) {
       return
     }
-    const x = e.clientX
-    const y = e.clientY
+    // const x = e.clientX
+    // const y = e.clientY
+    // fix point mouse position
+    const x = e.offsetX
+    const y = e.offsetY
     const mouse = new THREE.Vector2()
     mouse.x = (x / this.renderer.domElement.clientWidth) * 2 - 1 // must use clientWidth rather than width here!
     mouse.y = -(y / this.renderer.domElement.clientHeight) * 2 + 1
@@ -516,10 +548,12 @@ export default class Measure {
     let fontSize = this.fontSize
     if (fontSize === 0) {
       fontSize = distance / 40
-      fontSize = Math.max(0.5, fontSize)
+      fontSize = Math.max(0.05, fontSize)
       fontSize = Math.min(5, fontSize)
       this.tempFontSize = fontSize
     }
+    console.log(fontSize)
+
     this.tempLabel = this.createLabel(this.font, label, fontSize)
     const axisX = new THREE.Vector3(1, 0, 0)
     const axisY = new THREE.Vector3(0, 1, 0)
@@ -528,7 +562,8 @@ export default class Measure {
     if (dirXZ.z > 0) {
       angle = -angle
     }
-    this.tempLabel.rotateOnAxis(axisY, angle)
+    // remove label rotate
+    // this.tempLabel.rotateOnAxis(axisY, angle)
     this.tempLabel.position.set(position.x, position.y, position.z)
     obj.add(this.tempLabel)
   }
@@ -553,6 +588,26 @@ export default class Measure {
       opacity: 0.6,
     })
     const obj = new THREE.Mesh(textGeom, textMat)
+    obj.name = this.LABEL_NAME
+    return obj
+  }
+  createHelper(text) {
+    const div = document.createElement('div')
+    // div.className = 'annotationLabel'
+    div.innerHTML = text
+    div.style.padding = '3px 6px'
+    div.style.color = '#fff'
+    div.style.fontSize = '12px'
+    div.style.position = 'absolute'
+    div.style.backgroundColor = 'rgba(25, 25, 25, 0.3)'
+    div.style.borderRadius = '12px'
+    // div.style.width = '200px'
+    // div.style.height = '100px'
+    // div.style.zIndex = 9999
+    div.style.top = '0px'
+    div.style.left = '0px'
+    // div.style.pointerEvents = 'none' // avoid html element to affect mouse event of the scene
+    const obj = new CSS2DObject(div)
     obj.name = this.LABEL_NAME
     return obj
   }
