@@ -18,13 +18,13 @@
       >
       <div
         class="p-2  hover:bg-indigo-600 hover:text-white active:bg-indigo-600 active:text-white"
-        :class="activeTool==='Area'?'bg-indigo-600 text-white': ''"
+        :class="activeTool==='Angle'?'bg-indigo-600 text-white': ''"
         @click="setTools('Angle')"
         >测角</div
       >
       <div class="p-2  hover:bg-indigo-600 hover:text-white" @click="setTools(null)">清空</div>
     </div>
-    <div id="container"> </div>
+    <div id="three-container" class="relative"> </div>
   </div>
 </template>
 
@@ -38,7 +38,7 @@ let tool:Measure|null
 let activeTool = ref(null)
 onMounted(() => {
   const container = ref('container')
-  three = new ThreeJs(document.getElementById('container'))
+  three = new ThreeJs(document.getElementById('three-container'))
   tool = three.initMesure(MeasureMode.Distance)
 
   // tool = three.initMesure(MeasureMode.Distance)
@@ -55,13 +55,17 @@ const setTools = (val) => {
   }
 }
 onBeforeUnmount(() => {
- three && (three.destroyed(), three = null)
+ if(three) {
+  three.destroyed()
+  three = null
+ }
+ debugger
  console.log(three);
 })
 </script>
 
 <style scoped lang="less">
-#container {
+#three-container {
   width: 100%;
   height: 700px;
 }

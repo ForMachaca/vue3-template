@@ -15,6 +15,7 @@ export default class ThreeJs {
   onWindowResizeFn: Function | null = null
   container: HTMLElement | null = null
   meeasureTool: Measure | null = null
+  requestIds: number[] = []
 
   constructor(container: HTMLElement | null) {
     container && this.init(container)
@@ -51,7 +52,16 @@ export default class ThreeJs {
     this.scene && (this.scene = null)
     this.onWindowResizeFn && window.removeEventListener('resize', this.onWindowResizeFn as any)
     // cancelAnimationFrame()
-    this.container && this.container.parentNode && (this.container.parentNode.removeChild(this.container), (this.container = null))
+    if (this.container && this.container.parentNode) {
+      this.container.parentNode.removeChild(this.container)
+      this.container = null
+    }
+    if (Array.isArray(this.requestIds) && this.requestIds.length > 0) {
+      this.requestIds.forEach((item) => {
+        cancelAnimationFrame(item)
+      })
+      this.requestIds = []
+    }
   }
   setLabelRenderer(container): void {
     this.labelRenderer = new CSS2DRenderer()
@@ -101,6 +111,9 @@ export default class ThreeJs {
     // 设置画布的大小
     this.renderer.setSize(container.clientWidth, container.clientHeight)
     container.style.position = 'relative'
+    this.renderer.domElement.style.position = 'absolute'
+    this.renderer.domElement.style.top = 0 + 'px'
+
     //canvas 画布  renderer.domElement
     container.appendChild(this.renderer.domElement)
   }
@@ -154,7 +167,8 @@ export default class ThreeJs {
   // 动画
   animate(): void {
     if (this.mesh) {
-      requestAnimationFrame(this.animate.bind(this))
+      const requestId = requestAnimationFrame(this.animate.bind(this))
+      this.requestIds.push(requestId)
       // this.mesh.rotation.x += 0.01
       // this.mesh.rotation.y += 0.01
       this.render()

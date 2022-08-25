@@ -67,7 +67,8 @@ export default class Measure {
   tempPoints?: THREE.Points // used to store temporary Points
   tempLine?: THREE.Line // used to store temporary line, which is useful for drawing line as mouse moves
   tempLineForArea?: THREE.Line // used to store temporary line, which is useful for drawing area as mouse moves
-  tempLabel?: THREE.Mesh // used to store temporary label as mouse moves
+  tempLabel?: THREE.Mesh | CSS2DObject | null // used to store temporary label as mouse moves
+  tempLineLabelArr: Array<any> = []
   pointCount = 0 // used to store how many points user have been picked
   pointArray: THREE.Vector3[] = []
   pointsArray: THREE.Vector3[] = []
@@ -112,6 +113,8 @@ export default class Measure {
     this.pointArray = []
     this.pointsArray = []
     this.helpLabel = null
+    this.tempLabel = null
+    this.tempLineLabelArr = []
 
     this.raycaster = new THREE.Raycaster()
 
@@ -150,11 +153,17 @@ export default class Measure {
     // delete
     this.helpLabel && this.scene.remove(this.helpLabel)
     this.tempLabel && this.scene.remove(this.tempLabel)
+    if (this.tempLineLabelArr.length > 0) {
+      this.tempLineLabelArr.forEach((item) => {
+        this.polyline?.remove(item)
+      })
+    }
 
     this.tempLabel = undefined
     this.helpLabel = undefined
     this.pointArray = []
     this.pointsArray = []
+    this.tempLineLabelArr = []
     this.raycaster = undefined
     this.tempPoints = undefined
     this.tempLine = undefined
@@ -258,6 +267,7 @@ export default class Measure {
         const d = distance * 0.2 // distance from label to p1
         const position = p1.clone().add(new THREE.Vector3(dir1.x * d, dir1.y * d, dir1.z * d))
         this.addOrUpdateLabel(this.polyline, label, position, dir1, distance)
+        // this.updateLabelPosition(label, position)
 
         const arcP0 = p1.clone().add(new THREE.Vector3(dir0.x * d, dir0.y * d, dir0.z * d))
         const arcP2 = p1.clone().add(new THREE.Vector3(dir2.x * d, dir2.y * d, dir2.z * d))
@@ -288,7 +298,15 @@ export default class Measure {
     this.isCompleted = true
     this.renderer.domElement.style.cursor = ''
     this.tempPoints && this.scene.remove(this.tempPoints)
-    this.tempLine && this.scene.remove(this.tempLine)
+    if (this.tempLine) {
+      this.tempLine && this.scene.remove(this.tempLine)
+      if (this.mode === MeasureMode.Distance) {
+        this.scene.remove(this.tempLabel as any)
+        // this.polyline?.remove(this.tempLineLabelArr.pop())
+      }
+      // this.scene.remove(this.tempLabel)
+      // this.polyline?.remove(this.tempLineLabelArr.pop())
+    }
     this.tempLineForArea && this.scene.remove(this.tempLineForArea)
     // delete
     this.helpLabel && this.scene.remove(this.helpLabel)
@@ -444,6 +462,7 @@ export default class Measure {
         pos.needsUpdate = true
         if (this.tempLabel) {
           // also add text for the line
+          this.tempLineLabelArr.push(this.tempLabel)
           this.polyline.add(this.tempLabel)
         }
         if (this.fontSize === 0) {
@@ -531,6 +550,18 @@ export default class Measure {
     })
   }
 
+  updateLabelPosition(label: string, position: THREE.Vector3) {
+    if (this.tempLabel) {
+      this.tempLabel.position.set(position.x, position.y, position.z * 1.1)
+      // if (this.tempLabel.element) {
+      //   this.tempLabel.element.innerHTML = label
+      // }
+    } else {
+      this.tempLabel = this.createHelper(label)
+      this.tempLabel.element.innerHTML = label
+      this.tempLabel.position.set(position.x, position.y, position.z * 1.1)
+    }
+  }
   /**
    * Adds or update label
    */
@@ -541,31 +572,35 @@ export default class Measure {
     }
     if (this.tempLabel) {
       // we have to remvoe the old text and create a new one, threejs doesn't support to change it dynamically
-      obj.remove(this.tempLabel)
+      // obj.remove(this.tempLabel)
+      this.scene.remove(this.tempLabel)
     }
     // make font size between 0.5 - 5
     // And, once font size is settled, all labels should have the same size
-    let fontSize = this.fontSize
-    if (fontSize === 0) {
-      fontSize = distance / 40
-      fontSize = Math.max(0.05, fontSize)
-      fontSize = Math.min(5, fontSize)
-      this.tempFontSize = fontSize
-    }
-    console.log(fontSize)
+    // let fontSize = this.fontSize
+    // if (fontSize === 0) {
+    //   fontSize = distance / 40
+    //   fontSize = Math.max(0.05, fontSize)
+    //   fontSize = Math.min(5, fontSize)
+    //   this.tempFontSize = fontSize
+    // }
+    // console.log(fontSize)
+    this.tempLabel = this.createHelper(label)
 
-    this.tempLabel = this.createLabel(this.font, label, fontSize)
-    const axisX = new THREE.Vector3(1, 0, 0)
-    const axisY = new THREE.Vector3(0, 1, 0)
-    const dirXZ = direction.clone().setY(0) // direction on XZ plane
-    let angle = dirXZ.angleTo(axisX) // in XZ plane, the angle to x-axis
-    if (dirXZ.z > 0) {
-      angle = -angle
-    }
+    // this.tempLabel = this.createLabel(this.font, label, fontSize)
+    // const axisX = new THREE.Vector3(1, 0, 0)
+    // const axisY = new THREE.Vector3(0, 1, 0)
+    // const dirXZ = direction.clone().setY(0) // direction on XZ plane
+    // let angle = dirXZ.angleTo(axisX) // in XZ plane, the angle to x-axis
+    // if (dirXZ.z > 0) {
+    //   angle = -angle
+    // }
     // remove label rotate
     // this.tempLabel.rotateOnAxis(axisY, angle)
-    this.tempLabel.position.set(position.x, position.y, position.z)
-    obj.add(this.tempLabel)
+    this.tempLabel.element.innerHTML = label
+    this.tempLabel.position.set(position.x, position.y, position.z * 1.1)
+    // obj.add(this.tempLabel)
+    this.scene.add(this.tempLabel)
   }
 
   /**
